@@ -27,7 +27,7 @@ class TitleScreen : MScreen
 		MDrawInfo canvasInfo = mCanvas.BeginDraw(info.mDelta);
 
 		mCanvas.DrawRect(new Rectangle(-500, -500, 1000, 1000), Color.DarkRed, Layer.BACKGROUND);
-		mCanvas.DrawString(mFont, "Menu", pos: new Vector2(0, 0), Layer.FRONT);
+		mCanvas.DrawString(mFont, "TAXI GAME", pos: new MAnchorVector2( Vector2.Zero, MAnchorType.Centre), Layer.FRONT);
 
 
 		mCanvas.EndDraw();

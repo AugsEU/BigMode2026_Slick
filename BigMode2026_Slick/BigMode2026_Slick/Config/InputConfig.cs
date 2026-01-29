@@ -2,9 +2,10 @@
 {
 	enum GInput
 	{
-		MoveLeft,
-		MoveRight,
-		Jump,
+		Left,
+		Right,
+		Forward,
+		Backward,
 		Confirm,
 	}
 
@@ -13,11 +14,10 @@
 		public static void SetDefaultButtons()
 		{
 			// Arrow keys or WASD
-			MugInput.I.BindButton(GInput.MoveLeft, new MKeyboardButton(Keys.Left), new MKeyboardButton(Keys.A));
-			MugInput.I.BindButton(GInput.MoveRight, new MKeyboardButton(Keys.Right), new MKeyboardButton(Keys.D));
-
-			// Jump
-			MugInput.I.BindButton(GInput.Jump, new MKeyboardButton(Keys.Space));
+			MugInput.I.BindButton(GInput.Left, new MKeyboardButton(Keys.Left), new MKeyboardButton(Keys.A));
+			MugInput.I.BindButton(GInput.Right, new MKeyboardButton(Keys.Right), new MKeyboardButton(Keys.D));
+			MugInput.I.BindButton(GInput.Forward, new MKeyboardButton(Keys.Up), new MKeyboardButton(Keys.W));
+			MugInput.I.BindButton(GInput.Backward, new MKeyboardButton(Keys.Down), new MKeyboardButton(Keys.S));
 
 			// Confirm
 			MugInput.I.BindButton(GInput.Confirm, new MKeyboardButton(Keys.Enter));
