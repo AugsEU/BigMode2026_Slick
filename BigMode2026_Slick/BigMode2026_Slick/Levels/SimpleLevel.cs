@@ -18,11 +18,11 @@ class SimpleLevel : MLevel
 		mCollider = r;
 	}
 
-	public override void Update(MScene scene, MUpdateInfo info)
+	public override void Update(MUpdateInfo info)
 	{
 	}
 
-	public override void Draw(MScene scene, MDrawInfo info)
+	public override void Draw(MDrawInfo info)
 	{
 		info.mCanvas.DrawRect(mCollider, Color.AliceBlue, Layer.BACKGROUND);
 	}

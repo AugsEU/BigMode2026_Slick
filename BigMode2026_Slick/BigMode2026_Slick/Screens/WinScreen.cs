@@ -27,7 +27,7 @@ class WinScreen : MScreen
 		MDrawInfo canvasInfo = mCanvas.BeginDraw(info.mDelta);
 
 		mCanvas.DrawRect(new Rectangle(-500, -500, 1000, 1000), Color.Black, Layer.BACKGROUND);
-		mCanvas.DrawStringCentred(mFont, Vector2.Zero, Color.White, "YOU WIN.", Layer.UI);
+		mCanvas.DrawString(mFont, "YOU WIN", pos: new Vector2(0, 0), Layer.FRONT);
 
 
 		mCanvas.EndDraw();
