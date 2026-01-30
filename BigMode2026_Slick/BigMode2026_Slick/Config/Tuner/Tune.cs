@@ -2,5 +2,5 @@
 
 struct Tune()
 {
-	public ExampleTunerValues Player = new();
+	public CarTuneValues Car = new();
 }

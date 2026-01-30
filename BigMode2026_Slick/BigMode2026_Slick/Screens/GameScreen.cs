@@ -24,7 +24,7 @@ internal class GameScreen : MScreen
 		mGameScene.AddUnique(new MGameObjectManager());
 
 		// Player
-		mGameScene.GO.Add(new Car(new Vector2(0.0f, 0.0f), new Point(40, 20), null));
+		mGameScene.GO.Add(new Car(new Vector2(0.0f, 0.0f), new Point(20, 40), null));
 	}
 
 	public override void Update(MUpdateInfo info)
