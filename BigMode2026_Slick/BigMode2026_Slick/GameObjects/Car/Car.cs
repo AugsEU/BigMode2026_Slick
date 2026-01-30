@@ -1,5 +1,4 @@
-﻿
-namespace BigMode2026_Slick;
+﻿namespace BigMode2026_Slick;
 
 internal class Car : MGameObject
 {
