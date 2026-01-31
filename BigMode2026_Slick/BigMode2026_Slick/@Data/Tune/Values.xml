@@ -1,14 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Tuning>
   <Car>
-    <EngineTorque type="Single">644.409</EngineTorque>
+    <EngineTorque type="Single">1102.202</EngineTorque>
     <FrontWheelFriction type="Single">68.34</FrontWheelFriction>
-    <BackWheelFriction type="Single">34.043</BackWheelFriction>
-    <WheelTurnAngle type="Single">0.276</WheelTurnAngle>
+    <BackWheelFriction type="Single">20.795</BackWheelFriction>
+    <WheelTurnAngle type="Single">0.205</WheelTurnAngle>
     <SpinDamping type="Single">0.483</SpinDamping>
     <MoI type="Single">0.929</MoI>
     <Mass type="Single">342.508</Mass>
-    <AirResistance type="Single">0.3</AirResistance>
-    <MagicTurnForce type="Single">1.343</MagicTurnForce>
+    <AirResistance type="Single">0.134</AirResistance>
+    <MagicTurnForce type="Single">0.741</MagicTurnForce>
   </Car>
 </Tuning>

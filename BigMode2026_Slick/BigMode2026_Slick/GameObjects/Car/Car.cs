@@ -1,4 +1,4 @@
-﻿#define CAR_DEBUG_DRAW
+﻿//#define CAR_DEBUG_DRAW
 
 namespace BigMode2026_Slick;
 
@@ -7,7 +7,7 @@ internal class Car : MGameObject
 	#region Constants
 
 	const int NUM_WHEELS = 4;
-	const float COM_SHIFT = 0.5f;
+	const float COM_SHIFT = 0.2f;
 
 	#endregion Constants
 
