@@ -7,7 +7,7 @@ internal class Car : MGameObject
 	#region Constants
 
 	const int NUM_WHEELS = 4;
-	const float COM_SHIFT = 0.3f;
+	const float COM_SHIFT = 0.5f;
 
 	#endregion Constants
 
@@ -57,6 +57,8 @@ internal class Car : MGameObject
 
 		mRect.mRot = 0.0f;
 
+		mAnimation = anim;
+
 	}
 
 	#endregion Init
@@ -72,6 +74,7 @@ internal class Car : MGameObject
 	/// </summary>
 	public override void Update(MUpdateInfo info)
 	{
+		mAnimation.Update(info);
 		UpdateInputs(info);
 
 		// Do physics in substeps to improve stability
@@ -113,6 +116,10 @@ internal class Car : MGameObject
 		if(MugInput.I.ButtonDown(GInput.DebugReset))
 		{
 			mCenterOfMass = Vector2.Zero;
+			mRect.mRot = 0.0f;
+			mVelocity = new Vector2(100.0f, 0.0f);
+			mAngularVel = 0.0f;
+			
 		}
 #endif 
 	}
@@ -128,6 +135,7 @@ internal class Car : MGameObject
 		float carMass = Tuning.I.Car.Mass;
 		float airResistanceCoef = Tuning.I.Car.AirResistance;
 		float spinDamp = Tuning.I.Car.SpinDamping;
+		float magicTurn = Tuning.I.Car.MagicTurnForce;
 
 		Vector2 x = mRect.GetSideVec();
 		Vector2 y = mRect.GetForwardVec();
@@ -155,7 +163,7 @@ internal class Car : MGameObject
 			Vector2 wheelDelta = xn * relPos.X + yn * relPos.Y;
 			Vector2 wheelPos = mCenterOfMass + wheelDelta;
 			Vector2 rotationVel = -wheelDelta.Perpendicular() * mAngularVel * MathF.Tau;
-			Vector2 wheelForce = ComputeWheelForces(info, 
+			Vector2 wheelForce = ComputeWheelForces(info,
 				groundSpeed: mVelocity + rotationVel,
 				wheelFacing: wheelFacing,
 				driveForceMag: backWheel ? mEngineTorque : 0.0f,
@@ -167,6 +175,10 @@ internal class Car : MGameObject
 			totalTorque += wheelTorque;
 
 #if CAR_DEBUG_DRAW
+			Vector2 wheelPerp = wheelFacing.Perpendicular();
+			Vector2 sideVel = Vector2.Dot(wheelPerp, mVelocity + rotationVel) * wheelPerp;
+
+			MugDebug.AddDebugRay(wheelPos, sideVel, Color.CornflowerBlue, Layer.FRONT);
 			MugDebug.AddDebugRay(wheelPos, wheelForce, Color.White, Layer.FRONT);
 			MugDebug.AddDebugRay(wheelPos, wheelFacing * 10.0f, Color.Brown, Layer.FRONT);
 			//MugDebug.AddDebugRay(wheelPos, rotationVel, Color.Blue, Layer.FRONT);
@@ -177,9 +189,15 @@ internal class Car : MGameObject
 		Vector2 resistance = -mVelocity * mVelocity.Length() * airResistanceCoef;
 		totalForce += resistance;
 
+		if(mWheelAngleDelta == 0.0f)
+		{
+			spinDamp *= 20.0f;
+		}
+
 		// A = F/M
 		mAngularVel += info.mDelta * (totalTorque / (carMoI * 10.0f));
-		mAngularVel -= info.mDelta * (mAngularVel * spinDamp);
+		mAngularVel += info.mDelta * (magicTurn * mWheelAngleDelta * mVelocity.Length());
+		mAngularVel = MugMath.MoveToZero(mAngularVel, Math.Abs(info.mDelta * (mAngularVel * spinDamp)));
 		mVelocity += info.mDelta * totalForce / carMass;
 
 		mCenterOfMass += info.mDelta * mVelocity;
@@ -248,6 +266,9 @@ internal class Car : MGameObject
 		info.mCanvas.DrawDot(mPosition, Color.AliceBlue, 1);
 		info.mCanvas.DrawDot(mCenterOfMass, Color.Yellow, 1);
 #endif // CAR_DEBUG_DRAW
+
+		MTexturePart part = mAnimation.GetCurrentTexture();
+		info.mCanvas.DrawTexture(part, mRect.mPos, layer: Layer.ENTITY, rot: mRect.mRot);
 	}
 
 	#endregion Draw

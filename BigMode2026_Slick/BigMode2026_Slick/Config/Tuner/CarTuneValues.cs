@@ -12,4 +12,6 @@ internal struct CarTuneValues()
 	public float Mass = 1000.0f;
 
 	public float AirResistance = 0.4f;
+
+	public float MagicTurnForce = 1.0f;
 }

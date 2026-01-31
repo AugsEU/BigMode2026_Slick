@@ -24,7 +24,15 @@ internal class GameScreen : MScreen
 		mGameScene.AddUnique(new MGameObjectManager());
 
 		// Player
-		mGameScene.GO.Add(new Car(new Vector2(0.0f, 0.0f), new Point(20, 40), null));
+		MAnimation carAnim = MData.I.LoadAnimation("Sprites/car");
+		Car player = new Car(new Vector2(0.0f, 0.0f), new Point(16, 32), carAnim);
+		mGameScene.GO.Add(player);
+
+		mGameScene.GO.LoadLevel(new SimpleLevel());
+
+		MGameObjectFocus focus = new(player);
+		focus.pSpeed = new Vector4(10.0f);
+		mCanvas.GetCamera().SetFocus(focus);
 	}
 
 	public override void Update(MUpdateInfo info)

@@ -26,7 +26,7 @@ public class Main : MugMainGame
 
 #if DEBUG
 		DRectLayer.NameLayers();
-		InitTuner<Tune>(Tuning.I, "@Data/Tune/Values.xml");
+		InitTuner<Tune>(Tuning.I, "../../../@Data/Tune/Values.xml");
 #endif // DEBUG
 	}
 
