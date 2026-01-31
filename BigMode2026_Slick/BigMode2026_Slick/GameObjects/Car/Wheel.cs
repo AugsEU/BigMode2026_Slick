@@ -25,11 +25,11 @@ class Wheel
 		// Ground friction 
 		float frictionMag = friction;
 		float atvMag = absoluteTyreVel.Length();
-		if (atvMag < 1.0f) // Near zero velocity reduce friction for simulation stability
+		if (atvMag < friction) // Near zero velocity reduce friction for simulation stability
 		{
-			frictionMag = 2.0f ;
+			frictionMag *= 2.0f;
 		}
-		else if(atvMag <= 5.0f) // Static friction is higher
+		else if(atvMag <= friction * 1.5f) // Static friction is higher
 		{
 			frictionMag *= 2.0f / atvMag;
 		}
@@ -44,11 +44,18 @@ class Wheel
 		// First the torque from the road friction
 		float frictionTorque = Vector2.Dot(wheelFacing, groundFriction);
 
+		MugDebug.AddDebugRay(pos, absoluteTyreVel, Color.White);
+
 		float totalToque = frictionTorque + engineTorque;
 
 		float angularAcc = totalToque / moi;
 		mAngleVel += angularAcc * info.mDelta;
 
 		return groundFriction;
+	}
+
+	public float GetAngularVel()
+	{
+		return mAngleVel;
 	}
 }

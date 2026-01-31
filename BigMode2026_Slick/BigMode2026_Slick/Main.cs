@@ -45,7 +45,7 @@ public class Main : MugMainGame
 			];
 
 
-		settings.mStartScreen = typeof(TitleScreen);
+		settings.mStartScreen = typeof(GameScreen);
 
 		return settings;
 	}

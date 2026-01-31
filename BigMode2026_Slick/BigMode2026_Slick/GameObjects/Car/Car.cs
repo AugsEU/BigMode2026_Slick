@@ -56,6 +56,8 @@ internal class Car : MGameObject
 		mWheelRelativePositions[2] = new Vector2(mSize.X * 0.5f, mSize.Y * (1.0f - COM_SHIFT));
 		mWheelRelativePositions[3] = new Vector2(-mSize.X * 0.5f, mSize.Y * (1.0f - COM_SHIFT));
 
+		mRect.mRot = 0.5f;
+
 	}
 
 	#endregion Init
@@ -88,11 +90,15 @@ internal class Car : MGameObject
 		
 		if (MugInput.I.ButtonDown(GInput.Left))
 		{
-			mWheelAngleDelta = turnAngle;
+			mWheelAngleDelta = -turnAngle;
 		}
 		else if(MugInput.I.ButtonDown(GInput.Right))
 		{
-			mWheelAngleDelta = -torque;
+			mWheelAngleDelta = turnAngle;
+		}
+		else
+		{
+			mWheelAngleDelta = 0.0f;
 		}
 	}
 
@@ -121,8 +127,6 @@ internal class Car : MGameObject
 			Vector2 relPos = mWheelRelativePositions[w];
 			float rd = relPos.Length();
 
-			Vector2 rotationVel = relPos.Perpendicular() * mAngularVel * MathF.Tau;
-
 			Vector2 wheelFacing = new Vector2(0.0f, -1.0f);
 
 			float wheelAngle = mRect.mRot;
@@ -130,20 +134,25 @@ internal class Car : MGameObject
 			{
 				wheelAngle += mWheelAngleDelta;
 			}
-			wheelFacing.Rotate(mRect.mRot + mWheelAngleDelta);
+			wheelFacing.Rotate(wheelAngle);
 
-
-			Vector2 wheelPos = mCenterOfMass + xn * relPos.X + yn * relPos.Y;
+			Vector2 wheelDelta = xn * relPos.X + yn * relPos.Y;
+			Vector2 wheelPos = mCenterOfMass + wheelDelta;
+			//Vector2 rotationVel = wheelDelta.Perpendicular() * mAngularVel * MathF.Tau;
 			Vector2 wheelForce = mWheels[w].ComputeForces(info, pos: wheelPos, 
-				groundSpeed: mVelocity + rotationVel,
+				groundSpeed: mVelocity,
 				wheelFacing: wheelFacing,
-				engineTorque: backWheel ? mEngineTorque : 0.0f, // only back wheels have torque
+				engineTorque: backWheel ? -mEngineTorque : 0.0f, // only back wheels have torque
 				friction: backWheel ? backFric : frontFric);
 
 			totalForce += wheelForce;
 
-			float wheelTorque = Vector2.Dot(relPos.Perpendicular(), wheelForce);
+			float wheelTorque = Vector2.Dot(wheelDelta.Perpendicular(), wheelForce);
 			totalTorque += wheelTorque;
+
+#if CAR_DEBUG_DRAW
+			MugDebug.AddDebugRay(wheelPos, wheelFacing * 10.0f, Color.Brown, Layer.FRONT);
+#endif // CAR_DEBUG_DRAW
 		}
 
 		// Resistance and losses proportional to L^2
@@ -192,7 +201,6 @@ internal class Car : MGameObject
 	public override void Draw(MDrawInfo info)
 	{
 #if CAR_DEBUG_DRAW
-
 		foreach(Vector2 pt in mRect.GetPoints())
 		{
 			info.mCanvas.DrawDot(pt, Color.Red, 0);
