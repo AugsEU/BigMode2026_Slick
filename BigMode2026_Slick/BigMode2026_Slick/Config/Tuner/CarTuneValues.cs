@@ -2,8 +2,6 @@
 
 internal struct CarTuneValues()
 {
-	public float WheelMoI = 10.0f;
-	public float WheelRadius = 0.5f;
 	public float EngineTorque = 10.0f;
 	public float FrontWheelFriction = 10.0f;
 	public float BackWheelFriction = 10.0f;
