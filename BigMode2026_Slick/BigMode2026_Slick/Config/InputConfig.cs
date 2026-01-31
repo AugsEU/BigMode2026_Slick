@@ -7,6 +7,8 @@
 		Forward,
 		Backward,
 		Confirm,
+
+		DebugReset
 	}
 
 	static class InputConfig
@@ -21,6 +23,11 @@
 
 			// Confirm
 			MugInput.I.BindButton(GInput.Confirm, new MKeyboardButton(Keys.Enter));
+
+			// Debug
+#if DEBUG
+			MugInput.I.BindButton(GInput.DebugReset, new MKeyboardButton(Keys.R));
+#endif
 		}
 	}
 }

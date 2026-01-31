@@ -27,10 +27,12 @@ internal class Car : MGameObject
 	float mEngineTorque = 0.0f;
 
 	MRotRect mRect = new();
-	Wheel[] mWheels = new Wheel[4];
-	Vector2[] mWheelRelativePositions = new Vector2[4];
+	Vector2[] mWheelPositions = new Vector2[4];
 
 	#endregion Members
+
+
+
 
 
 	#region Init
@@ -45,18 +47,15 @@ internal class Car : MGameObject
 		UpdatePosAndBounds();
 
 		// Init wheels
-		for (int w = 0; w < NUM_WHEELS; w++)
-			mWheels[w] = new Wheel();
-
 		// Front wheels
-		mWheelRelativePositions[0] = new Vector2(mSize.X * 0.5f, -mSize.Y * COM_SHIFT);
-		mWheelRelativePositions[1] = new Vector2(-mSize.X * 0.5f, -mSize.Y * COM_SHIFT);
+		mWheelPositions[0] = new Vector2(mSize.X * 0.5f, -mSize.Y * COM_SHIFT);
+		mWheelPositions[1] = new Vector2(-mSize.X * 0.5f, -mSize.Y * COM_SHIFT);
 
 		// Back wheels
-		mWheelRelativePositions[2] = new Vector2(mSize.X * 0.5f, mSize.Y * (1.0f - COM_SHIFT));
-		mWheelRelativePositions[3] = new Vector2(-mSize.X * 0.5f, mSize.Y * (1.0f - COM_SHIFT));
+		mWheelPositions[2] = new Vector2(mSize.X * 0.5f, mSize.Y * (1.0f - COM_SHIFT));
+		mWheelPositions[3] = new Vector2(-mSize.X * 0.5f, mSize.Y * (1.0f - COM_SHIFT));
 
-		mRect.mRot = 0.5f;
+		mRect.mRot = 0.0f;
 
 	}
 
@@ -74,7 +73,16 @@ internal class Car : MGameObject
 	public override void Update(MUpdateInfo info)
 	{
 		UpdateInputs(info);
-		UpdatePhysics(info);
+
+		// Do physics in substeps to improve stability
+		const int NUM_SUB_STEPS = 4;
+		MUpdateInfo stepInfo = info;
+		stepInfo.mDelta *= 1.0f / NUM_SUB_STEPS;
+
+		for (int i = 0; i < NUM_SUB_STEPS; i++)
+		{
+			UpdatePhysics(info);
+		}
 	}
 
 	void UpdateInputs(MUpdateInfo info)
@@ -100,6 +108,13 @@ internal class Car : MGameObject
 		{
 			mWheelAngleDelta = 0.0f;
 		}
+
+#if DEBUG
+		if(MugInput.I.ButtonDown(GInput.DebugReset))
+		{
+			mCenterOfMass = Vector2.Zero;
+		}
+#endif 
 	}
 
 	/// <summary>
@@ -112,6 +127,7 @@ internal class Car : MGameObject
 		float carMoI = Tuning.I.Car.MoI;
 		float carMass = Tuning.I.Car.Mass;
 		float airResistanceCoef = Tuning.I.Car.AirResistance;
+		float spinDamp = Tuning.I.Car.SpinDamping;
 
 		Vector2 x = mRect.GetSideVec();
 		Vector2 y = mRect.GetForwardVec();
@@ -121,10 +137,10 @@ internal class Car : MGameObject
 
 		Vector2 totalForce = Vector2.Zero;
 		float totalTorque = 0.0f;
-		for(int w = 0; w < mWheels.Length; w++)
+		for(int w = 0; w < NUM_WHEELS; w++)
 		{
 			bool backWheel = w >= 2;
-			Vector2 relPos = mWheelRelativePositions[w];
+			Vector2 relPos = mWheelPositions[w];
 			float rd = relPos.Length();
 
 			Vector2 wheelFacing = new Vector2(0.0f, -1.0f);
@@ -138,20 +154,22 @@ internal class Car : MGameObject
 
 			Vector2 wheelDelta = xn * relPos.X + yn * relPos.Y;
 			Vector2 wheelPos = mCenterOfMass + wheelDelta;
-			//Vector2 rotationVel = wheelDelta.Perpendicular() * mAngularVel * MathF.Tau;
-			Vector2 wheelForce = mWheels[w].ComputeForces(info, pos: wheelPos, 
-				groundSpeed: mVelocity,
+			Vector2 rotationVel = -wheelDelta.Perpendicular() * mAngularVel * MathF.Tau;
+			Vector2 wheelForce = ComputeWheelForces(info, 
+				groundSpeed: mVelocity + rotationVel,
 				wheelFacing: wheelFacing,
-				engineTorque: backWheel ? -mEngineTorque : 0.0f, // only back wheels have torque
+				driveForceMag: backWheel ? mEngineTorque : 0.0f,
 				friction: backWheel ? backFric : frontFric);
 
 			totalForce += wheelForce;
 
-			float wheelTorque = Vector2.Dot(wheelDelta.Perpendicular(), wheelForce);
+			float wheelTorque = Vector2.Dot(-wheelDelta.Perpendicular(), wheelForce);
 			totalTorque += wheelTorque;
 
 #if CAR_DEBUG_DRAW
+			MugDebug.AddDebugRay(wheelPos, wheelForce, Color.White, Layer.FRONT);
 			MugDebug.AddDebugRay(wheelPos, wheelFacing * 10.0f, Color.Brown, Layer.FRONT);
+			//MugDebug.AddDebugRay(wheelPos, rotationVel, Color.Blue, Layer.FRONT);
 #endif // CAR_DEBUG_DRAW
 		}
 
@@ -160,8 +178,9 @@ internal class Car : MGameObject
 		totalForce += resistance;
 
 		// A = F/M
-		mAngularVel += info.mDelta * (totalTorque / carMoI);
-		mVelocity += info.mDelta * totalForce ;
+		mAngularVel += info.mDelta * (totalTorque / (carMoI * 10.0f));
+		mAngularVel -= info.mDelta * (mAngularVel * spinDamp);
+		mVelocity += info.mDelta * totalForce / carMass;
 
 		mCenterOfMass += info.mDelta * mVelocity;
 		mRect.mRot += info.mDelta * mAngularVel;
@@ -169,6 +188,26 @@ internal class Car : MGameObject
 		UpdatePosAndBounds();
 	}
 
+	/// <summary>
+	/// Computes forces on the wheel
+	/// </summary>
+	public Vector2 ComputeWheelForces(MUpdateInfo info, Vector2 groundSpeed, Vector2 wheelFacing, float driveForceMag, float friction)
+	{
+		MugDebug.Assert(MugMath.ApproxEqual(wheelFacing.LengthSquared(), 1.0f), "Non normalised wheel facing vector");
+
+		Vector2 wheelPerp = wheelFacing.Perpendicular();
+		Vector2 sideVel = Vector2.Dot(wheelPerp, groundSpeed) * wheelPerp;
+
+		const float VEL_THRESH = 400.0f;
+		float sideVelLen = sideVel.Length();
+		if(sideVelLen < VEL_THRESH)
+		{
+			sideVelLen = VEL_THRESH;
+		}
+		Vector2 frictionForce = -(friction / sideVelLen) * sideVel;
+
+		return driveForceMag * wheelFacing + frictionForce;
+	}
 
 	/// <summary>
 	/// Update the gameobject's position and bounds
